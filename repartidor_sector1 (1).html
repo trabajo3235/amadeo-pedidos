@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Amadeo — Repartidor</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap');
+:root{
+  --bg:#eef4ee;--paper:#f8fdf8;--ink:#121a12;--ink2:#2e3d2e;
+  --muted:#7a8a7a;--rule:#c0d4c0;--accent:#c0392b;--green:#1e6b3c;
+  --blue:#1a4a7a;--orange:#e67e22;--purple:#6c3483;--gold:#c8a000;--r:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--ink);font-family:'Barlow',sans-serif;min-height:100vh;padding-bottom:70px;}
+
+/* ── HEADER ── */
+.app-bar{background:var(--ink);position:sticky;top:0;z-index:200;}
+.app-bar-top{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;}
+.app-bar h1{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:800;letter-spacing:1px;color:#fff;}
+.prog-badge{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:800;color:#aaa;}
+.prog-wrap{height:4px;background:#1e2e1e;}
+.prog-bar{height:100%;background:var(--green);transition:width .4s;}
+
+.tabs{display:flex;background:#0a120a;}
+.tab-btn{flex:1;background:none;border:none;color:#555;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:.74rem;font-weight:700;letter-spacing:.8px;padding:10px 4px;text-transform:uppercase;border-bottom:3px solid transparent;transition:all .2s;}
+.tab-btn.active{color:#fff;border-bottom-color:#4caf50;background:#142014;}
+
+.view{display:none;padding:13px;}
+.view.active{display:block;}
+
+/* ── SUB TABS (pendientes/entregados) ── */
+.sub-tabs{display:flex;background:#deeade;border-radius:var(--r);padding:3px;margin-bottom:12px;gap:3px;}
+.sub-tab{flex:1;background:none;border:none;border-radius:6px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:.5px;padding:8px 4px;text-align:center;text-transform:uppercase;transition:all .2s;color:var(--muted);}
+.sub-tab.active{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.1);}
+.sub-tab .cnt{background:var(--accent);border-radius:10px;color:#fff;font-size:.62rem;font-weight:800;margin-left:4px;padding:1px 5px;}
+.sub-tab.active .cnt{background:var(--green);}
+
+.sub-view{display:none;}
+.sub-view.active{display:block;}
+
+/* ── PARADA (pendiente) ── */
+.parada{background:var(--paper);border:1px solid var(--rule);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.parada-top{display:flex;align-items:stretch;border-bottom:1px solid var(--rule);}
+.parada-num{background:var(--ink);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:800;min-width:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.parada-info{flex:1;padding:8px 10px;min-width:0;}
+.parada-cliente{font-family:'Barlow Condensed',sans-serif;font-size:.97rem;font-weight:800;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.parada-dir{font-size:.71rem;color:var(--muted);margin-top:1px;}
+.parada-tel{font-size:.7rem;color:var(--blue);margin-top:1px;}
+.p-zona{background:var(--ink);color:#fff;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-size:.6rem;font-weight:700;padding:1px 5px;}
+.parada-cobrar{background:var(--green);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px 9px;min-width:80px;text-align:center;flex-shrink:0;}
+.parada-cobrar .clbl{font-size:.55rem;letter-spacing:1.5px;text-transform:uppercase;opacity:.8;margin-bottom:1px;}
+.parada-cobrar .cval{font-family:'Barlow Condensed',sans-serif;font-size:.97rem;font-weight:800;line-height:1.1;}
+.parada-cobrar.nc{background:var(--muted);}
+
+/* items pedido */
+.parada-items{padding:7px 10px;display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--rule);}
+.ptag{background:#e0eee0;border:1px solid #b0d0b0;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:.79rem;font-weight:700;padding:2px 7px;}
+.ptag .pqty{color:var(--blue);margin-right:2px;}
+.ptag.promo{background:#fff5c0;border-color:var(--gold);}
+.ptag.promo .pqty{color:#8a6000;}
+.ptag.modificado{background:#fde8e0;border-color:#e07050;}
+
+.parada-obs{padding:4px 10px;font-size:.71rem;color:var(--orange);font-style:italic;border-bottom:1px solid var(--rule);}
+
+/* panel modificar pedido */
+.mod-panel{background:#f0f8f0;border-bottom:1px solid var(--rule);padding:10px 11px;display:none;}
+.mod-panel.open{display:block;}
+.mod-title{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.mod-items{display:flex;flex-direction:column;gap:5px;margin-bottom:8px;}
+.mod-item{background:#fff;border:1.5px solid var(--rule);border-radius:6px;display:flex;align-items:center;gap:7px;padding:6px 9px;}
+.mod-item-nombre{flex:1;font-size:.84rem;font-weight:600;min-width:0;}
+.mod-qty-wrap{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.mod-qty-wrap button{background:var(--rule);border:none;border-radius:3px;color:var(--ink);cursor:pointer;font-size:.9rem;font-weight:700;width:24px;height:24px;display:flex;align-items:center;justify-content:center;transition:background .1s;}
+.mod-qty-wrap button:hover{background:var(--blue);color:#fff;}
+.mod-qty-wrap button.minus:hover{background:var(--accent);color:#fff;}
+.mod-qty{background:none;border:none;color:var(--blue);font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:800;text-align:center;width:28px;padding:0;outline:none;}
+.mod-sub{font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;color:var(--green);min-width:60px;text-align:right;white-space:nowrap;}
+
+/* buscador prod para agregar */
+.mod-search-wrap{position:relative;margin-bottom:7px;}
+.mod-search-wrap input{background:#fff;border:1.5px solid var(--rule);border-radius:5px;color:var(--ink);font-family:'Barlow',sans-serif;font-size:.88rem;padding:7px 10px;outline:none;width:100%;transition:border .15s;}
+.mod-search-wrap input:focus{border-color:var(--green);}
+.mod-ac{position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--green);border-top:none;border-radius:0 0 6px 6px;max-height:180px;overflow-y:auto;z-index:60;box-shadow:0 4px 12px rgba(0,0,0,.12);display:none;}
+.mod-ac-item{cursor:pointer;padding:8px 11px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;font-size:.84rem;font-weight:600;transition:background .1s;}
+.mod-ac-item:last-child{border-bottom:none;}
+.mod-ac-item:hover{background:#e8f5e8;}
+
+.mod-total{display:flex;align-items:center;justify-content:space-between;background:var(--ink);border-radius:5px;padding:8px 12px;margin-bottom:8px;}
+.mod-total .lbl{color:#aaa;font-size:.72rem;letter-spacing:1px;text-transform:uppercase;}
+.mod-total .val{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:#fff;}
+.btn-aplicar-mod{background:var(--green);border:none;border-radius:5px;color:#fff;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:1px;padding:9px;text-transform:uppercase;width:100%;}
+.btn-aplicar-mod:hover{background:#155c30;}
+
+/* panel cobro */
+.cobro-panel{background:#eaf4ea;border-bottom:1px solid var(--rule);padding:10px 11px;}
+.cobro-lbl{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.modo-btns{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.modo-btn{border:2px solid var(--rule);border-radius:7px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;padding:8px 11px;transition:all .15s;background:#fff;color:var(--ink2);}
+.modo-btn.s-efe{background:#1a5c1a;border-color:#1a5c1a;color:#fff;}
+.modo-btn.s-tra{background:#1a3a7a;border-color:#1a3a7a;color:#fff;}
+.modo-btn.s-mix{background:#5a3a00;border-color:#5a3a00;color:#fff;}
+.monto-row{display:flex;gap:7px;margin-bottom:8px;flex-wrap:wrap;}
+.monto-field{flex:1;min-width:120px;}
+.monto-field label{font-size:.67rem;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:3px;}
+.monto-field input{background:#fff;border:1.5px solid var(--rule);border-radius:5px;color:var(--ink);font-family:'Barlow',sans-serif;font-size:.92rem;padding:7px 9px;outline:none;width:100%;transition:border .15s;}
+.monto-field input:focus{border-color:var(--green);}
+.obs-cobro{margin-bottom:8px;}
+.obs-cobro label{font-size:.67rem;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:3px;}
+.obs-cobro textarea{background:#fff;border:1.5px solid var(--rule);border-radius:5px;color:var(--ink);font-family:'Barlow',sans-serif;font-size:.82rem;padding:7px 9px;outline:none;width:100%;height:34px;resize:none;transition:border .15s;}
+.obs-cobro textarea:focus{border-color:var(--green);}
+
+.parada-actions{display:flex;border-top:1px solid var(--rule);}
+.parada-actions button{flex:1;background:none;border:none;cursor:pointer;font-family:'Barlow',sans-serif;font-size:.71rem;padding:8px 4px;color:var(--muted);transition:all .15s;border-right:1px solid var(--rule);}
+.parada-actions button:last-child{border-right:none;}
+.parada-actions button:hover{background:#f0f8f0;color:var(--ink);}
+.parada-actions button.btn-entregar{background:var(--green);color:#fff;font-weight:600;}
+.parada-actions button.btn-entregar:hover{background:#155c30;}
+.parada-actions button.btn-mod{color:var(--blue);}
+.parada-actions button.btn-mod.active{background:#eef4ff;color:var(--blue);font-weight:600;}
+
+/* ── CARD ENTREGADO ── */
+.entregado-card{background:var(--paper);border:1px solid #a0c8a0;border-radius:var(--r);margin-bottom:9px;overflow:hidden;opacity:.85;}
+.ec-top{display:flex;align-items:stretch;border-bottom:1px solid #b0d0b0;}
+.ec-num{background:var(--green);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:800;min-width:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ec-info{flex:1;padding:7px 10px;min-width:0;}
+.ec-cliente{font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:800;}
+.ec-dir{font-size:.71rem;color:var(--muted);margin-top:1px;}
+.ec-items{padding:6px 10px;display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid #b0d0b0;}
+.ec-cobro{background:#e4f4e4;padding:7px 10px;font-size:.78rem;border-bottom:1px solid #b0d0b0;}
+.ec-cobro .modo{font-weight:700;color:var(--green);}
+.ec-cobro .acl{color:var(--orange);font-style:italic;margin-top:2px;font-size:.73rem;}
+/* FACTURADO badge */
+.ec-factura{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;background:#f0f8f0;}
+.factura-badge{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted);}
+.factura-check{width:18px;height:18px;border:2px solid var(--rule);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;}
+.factura-check.marcado{background:var(--green);border-color:var(--green);}
+.factura-check.marcado::after{content:'✓';color:#fff;font-size:.75rem;font-weight:800;}
+.factura-lbl{font-size:.75rem;}
+.factura-lbl.ok{color:var(--green);font-weight:600;}
+.ec-foot{display:flex;border-top:1px solid #b0d0b0;}
+.ec-foot button{flex:1;background:none;border:none;cursor:pointer;font-size:.71rem;color:var(--muted);padding:7px;transition:all .15s;}
+.ec-foot button:hover{background:#e8f5e8;color:var(--ink);}
+
+/* ── STOCK ── */
+.stock-section{margin-bottom:14px;}
+.res-box{background:var(--paper);border:2px solid var(--ink);border-radius:var(--r);overflow:hidden;}
+.res-hdr{background:var(--ink);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.76rem;font-weight:700;letter-spacing:2px;padding:7px 12px;text-transform:uppercase;}
+.res-hdr.prosp{background:var(--purple);}
+.stock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}
+.si{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between;padding:9px 11px;}
+.si:nth-child(even){background:#f0f8f0;}
+.si-name{font-size:.78rem;color:var(--ink2);}
+.si-qty{font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:800;}
+.total-bar{border-top:2px solid var(--ink);display:flex;align-items:center;justify-content:space-between;padding:11px 13px;}
+.total-lbl{font-family:'Barlow Condensed',sans-serif;font-size:.76rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+.total-val{font-family:'Barlow Condensed',sans-serif;font-size:1.8rem;font-weight:800;color:var(--green);}
+
+/* reporte */
+.btn-reporte{background:var(--blue);border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:1.5px;padding:13px;text-transform:uppercase;width:100%;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;}
+.btn-reporte:hover{background:#123a63;}
+
+.no-data{text-align:center;padding:40px 16px;color:var(--muted);}
+.no-data .nd-icon{font-size:3rem;margin-bottom:10px;}
+.no-data .nd-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:5px;color:var(--ink);}
+.no-data p{font-size:.82rem;line-height:1.55;}
+.empty{color:var(--muted);font-size:.82rem;padding:22px 0;text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="app-bar">
+  <div class="app-bar-top">
+    <h1>🚚 Amadeo — Repartidor</h1>
+    <span class="prog-badge" id="progBadge"></span>
+  </div>
+  <div class="prog-wrap"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('ruta')">🗺 Recorrido</button>
+    <button class="tab-btn"        onclick="switchTab('stock')">📦 Stock</button>
+  </div>
+</div>
+
+<!-- ══ RECORRIDO ══ -->
+<div class="view active" id="view-ruta">
+  <div class="sub-tabs">
+    <button class="sub-tab active" id="st-pend" onclick="switchSub('pend')">
+      ⏳ Pendientes <span class="cnt" id="cnt-pend">0</span>
+    </button>
+    <button class="sub-tab" id="st-ent" onclick="switchSub('ent')">
+      ✅ Entregados <span class="cnt" id="cnt-ent">0</span>
+    </button>
+  </div>
+
+  <div class="sub-view active" id="sv-pend"></div>
+  <div class="sub-view"        id="sv-ent"></div>
+
+  <button class="btn-reporte" id="btnReporte" style="display:none;" onclick="enviarReporte()">
+    📋 ENVIAR REPORTE AL ADMINISTRATIVO
+  </button>
+</div>
+
+<!-- ══ STOCK ══ -->
+<div class="view" id="view-stock">
+  <div class="stock-section">
+    <div class="res-box">
+      <div class="res-hdr">📦 Pedidos — Unidades a entregar</div>
+      <div class="stock-grid" id="stockPedGrid"></div>
+      <div class="total-bar">
+        <span class="total-lbl">Total a cobrar</span>
+        <span class="total-val" id="totalFinal">$ 0</span>
+      </div>
+    </div>
+  </div>
+  <div class="stock-section" id="stockProspSection" style="display:none;">
+    <div class="res-box">
+      <div class="res-hdr prosp">⭐ Prospección — Stock extra para vender</div>
+      <div class="stock-grid" id="stockProspGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// CARGAR DATOS DEL LINK
+// ══════════════════════════════════════════════
+let pedidos  = [];
+let catalogo = [];
+let prospData= {};
+// estado por pedido: {modo, efectivo, transferencia, obs, entregado, itemsMod, facturado}
+let estado   = {};
+
+function cargarDatos() {
+  const p = new URLSearchParams(window.location.search).get('d');
+  if (!p) return;
+  try {
+    const payload = JSON.parse(decodeURIComponent(escape(atob(p))));
+    pedidos  = payload.pedidos  || [];
+    catalogo = payload.catalogo || [];
+    prospData= payload.prosp    || {};
+    // Restaurar estado de sesión
+    const s = sessionStorage.getItem('rep_estado');
+    if (s) {
+      const parsed = JSON.parse(s);
+      // Solo restaurar si corresponde al mismo payload
+      if (parsed._ts === p.slice(0,20)) estado = parsed.data || {};
+    }
+  } catch(e) { pedidos=[]; }
+}
+
+function saveEstado() {
+  // Guardar en sessionStorage propio
+  const p = new URLSearchParams(window.location.search).get('d') || '';
+  sessionStorage.setItem('rep_estado', JSON.stringify({_ts:p.slice(0,20), data:estado}));
+  // Guardar también en localStorage para que el admin pueda leerlo
+  localStorage.setItem('s1_rep_estado', JSON.stringify(estado));
+}
+
+// ══════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════
+let subActual = 'pend';
+
+function switchTab(t) {
+  ['ruta','stock'].forEach((n,i) => {
+    document.querySelectorAll('.tab-btn')[i].classList.toggle('active', n===t);
+    document.getElementById('view-'+n).classList.toggle('active', n===t);
+  });
+  if (t==='stock') renderStock();
+}
+
+function switchSub(s) {
+  subActual = s;
+  ['pend','ent'].forEach(n => {
+    document.getElementById('st-'+n).classList.toggle('active', n===s);
+    document.getElementById('sv-'+n).classList.toggle('active', n===s);
+  });
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+function init() {
+  cargarDatos();
+  document.addEventListener('click', e => {
+    // cerrar autocompletes de modificación
+    if (!e.target.closest('.mod-search-wrap')) {
+      document.querySelectorAll('.mod-ac').forEach(el => el.style.display='none');
+    }
+  });
+  renderRuta();
+}
+
+// ══════════════════════════════════════════════
+// RENDER RECORRIDO
+// ══════════════════════════════════════════════
+function getEstado(i) {
+  if (!estado[i]) estado[i] = {modo:'',efectivo:'',transferencia:'',obs:'',entregado:false,facturado:false,itemsMod:null};
+  return estado[i];
+}
+
+function renderRuta() {
+  if (!pedidos.length) {
+    document.getElementById('sv-pend').innerHTML=`<div class="no-data"><div class="nd-icon">📭</div><div class="nd-title">Sin recorrido</div><p>Esperá que el administrativo te envíe el link del recorrido.</p></div>`;
+    document.getElementById('sv-ent').innerHTML='';
+    document.getElementById('progBadge').textContent='';
+    document.getElementById('btnReporte').style.display='none';
+    return;
+  }
+
+  const pend = pedidos.map((p,i)=>({...p,_i:i})).filter(p=>!getEstado(p._i).entregado);
+  const ents  = pedidos.map((p,i)=>({...p,_i:i})).filter(p=> getEstado(p._i).entregado);
+
+  document.getElementById('cnt-pend').textContent = pend.length;
+  document.getElementById('cnt-ent').textContent  = ents.length;
+  document.getElementById('progBar').style.width  = Math.round(ents.length/pedidos.length*100)+'%';
+  document.getElementById('progBadge').textContent= ents.length+'/'+pedidos.length;
+  document.getElementById('btnReporte').style.display = ents.length===pedidos.length&&pedidos.length>0?'flex':'none';
+
+  // ── PENDIENTES ──
+  const svP = document.getElementById('sv-pend');
+  if (!pend.length) {
+    svP.innerHTML='<div class="empty">✅ Todos los pedidos entregados.</div>';
+  } else {
+    svP.innerHTML='';
+    pend.forEach((p, pos) => {
+      const i = p._i;
+      const est = getEstado(i);
+      // Items actuales (modificados o originales)
+      const items = est.itemsMod || p.items;
+      const totalActual = calcTotal(items);
+      const div = document.createElement('div');
+      div.className='parada'; div.id='parada-'+i;
+      div.innerHTML = buildParadaHTML(p, i, pos, items, totalActual, est);
+      svP.appendChild(div);
+    });
+  }
+
+  // ── ENTREGADOS ──
+  const svE = document.getElementById('sv-ent');
+  if (!ents.length) {
+    svE.innerHTML='<div class="empty">Todavía no hay entregas marcadas.</div>';
+  } else {
+    svE.innerHTML='';
+    ents.forEach((p, pos) => {
+      const i = p._i;
+      const est = getEstado(i);
+      const items = est.itemsMod || p.items;
+      const totalActual = calcTotal(items);
+      const card = document.createElement('div');
+      card.className='entregado-card'; card.id='ent-'+i;
+      card.innerHTML = buildEntregadoHTML(p, i, pos, items, totalActual, est);
+      svE.appendChild(card);
+    });
+  }
+}
+
+function buildParadaHTML(p, i, pos, items, totalActual, est) {
+  const itemsHTML = items.map(it => {
+    const mod = p.items.find(o=>o.id===it.id);
+    const modificado = !mod || mod.q !== it.q;
+    return `<span class="ptag${it.esPromo?' promo':''}${modificado?' modificado':''}"><span class="pqty">${it.q}×</span>${it.n}</span>`;
+  }).join('');
+
+  const cobHTML = totalActual > 0
+    ? `<div class="parada-cobrar"><span class="clbl">Cobrar</span><span class="cval" id="cval-${i}">$${totalActual.toLocaleString('es-AR')}</span></div>`
+    : `<div class="parada-cobrar nc"><span class="clbl">Sin monto</span></div>`;
+
+  const modo = est.modo||'';
+  const showEfe = modo==='efe'||modo==='mix';
+  const showTra = modo==='tra'||modo==='mix';
+
+  const montosHTML = `
+    <div class="monto-row" id="montos-${i}">
+      ${showEfe?`<div class="monto-field"><label>💵 Efectivo $</label><input type="number" id="efe-${i}" value="${est.efectivo||''}" placeholder="0" oninput="saveM(${i})"/></div>`:''}
+      ${showTra?`<div class="monto-field"><label>📲 Transferencia $</label><input type="number" id="tra-${i}" value="${est.transferencia||''}" placeholder="0" oninput="saveM(${i})"/></div>`:''}
+    </div>`;
+
+  const modPanelHTML = buildModPanel(i, items);
+
+  return `
+    <div class="parada-top">
+      <div class="parada-num">${pos+1}</div>
+      <div class="parada-info">
+        <div class="parada-cliente">${p.cliente}${p.zona?`<span class="p-zona">${p.zona}</span>`:''}</div>
+        <div class="parada-dir">📍 ${p.dir||'—'}</div>
+        ${p.tel?`<div class="parada-tel">📱 ${p.tel}</div>`:''}
+      </div>
+      ${cobHTML}
+    </div>
+    <div class="parada-items" id="pitems-${i}">${itemsHTML}</div>
+    ${p.obs?`<div class="parada-obs">⚠ ${p.obs}</div>`:''}
+    ${modPanelHTML}
+    <div class="cobro-panel">
+      <div class="cobro-lbl">Forma de pago</div>
+      <div class="modo-btns">
+        <button class="modo-btn${modo==='efe'?' s-efe':''}" onclick="setModo(${i},'efe')">💵 Efectivo</button>
+        <button class="modo-btn${modo==='tra'?' s-tra':''}" onclick="setModo(${i},'tra')">📲 Transferencia</button>
+        <button class="modo-btn${modo==='mix'?' s-mix':''}" onclick="setModo(${i},'mix')">🔀 Mixto</button>
+      </div>
+      ${montosHTML}
+      <div class="obs-cobro">
+        <label>Aclaración</label>
+        <textarea id="obs-${i}" oninput="saveObs(${i})" placeholder="Ej: sobra 1 Red Box, faltó cambio…">${est.obs||''}</textarea>
+      </div>
+    </div>
+    <div class="parada-actions">
+      <button class="btn-mod${est._modOpen?' active':''}" onclick="toggleMod(${i})">✏ Modificar</button>
+      <button class="btn-entregar" onclick="marcarEntregado(${i})">✓ Entregado</button>
+    </div>`;
+}
+
+function buildModPanel(i, items) {
+  // Panel para modificar cantidades y agregar productos
+  const itemsEditHTML = items.map((it,idx) => `
+    <div class="mod-item">
+      <div class="mod-item-nombre">${it.n}</div>
+      <div class="mod-qty-wrap">
+        <button class="minus" onclick="modChg(${i},${idx},-1)">−</button>
+        <input class="mod-qty" type="number" min="0" value="${it.q}"
+          oninput="modSet(${i},${idx},this.value)" onfocus="this.select()"/>
+        <button onclick="modChg(${i},${idx},1)">+</button>
+      </div>
+      <div class="mod-sub" id="modsub-${i}-${idx}">$${(it.q*it.precioUnit).toLocaleString('es-AR')}</div>
+    </div>`).join('');
+
+  return `
+    <div class="mod-panel" id="mod-${i}">
+      <div class="mod-title">✏ Modificar pedido — cambiá cantidades o agregá productos</div>
+      <div class="mod-items" id="moditems-${i}">${itemsEditHTML}</div>
+      <div class="mod-search-wrap">
+        <input type="text" placeholder="Agregar producto (buscá por nombre…)"
+          oninput="buscarModProd(${i},this.value)" autocomplete="off" id="modsearch-${i}"/>
+        <div class="mod-ac" id="modac-${i}"></div>
+      </div>
+      <div class="mod-total">
+        <span class="lbl">Nuevo total</span>
+        <span class="val" id="modtotal-${i}">$0</span>
+      </div>
+      <button class="btn-aplicar-mod" onclick="aplicarMod(${i})">APLICAR CAMBIOS</button>
+    </div>`;
+}
+
+function buildEntregadoHTML(p, i, pos, items, totalActual, est) {
+  const modos = {efe:'💵 Efectivo',tra:'📲 Transferencia',mix:'🔀 Mixto'};
+  let cobroTxt = modos[est.modo]||'—';
+  if(est.modo==='efe'||est.modo==='mix') cobroTxt += est.efectivo?` — $${Number(est.efectivo).toLocaleString('es-AR')}`:' ';
+  if(est.modo==='tra'||est.modo==='mix') cobroTxt += est.transferencia?` + Transf $${Number(est.transferencia).toLocaleString('es-AR')}`:' ';
+
+  const itemsHTML = items.map(it =>
+    `<span class="ptag"><span class="pqty">${it.q}×</span>${it.n}</span>`).join('');
+
+  // Leer estado de facturado desde el admin (localStorage compartido)
+  const facturados = JSON.parse(localStorage.getItem('s1_facturados') || '{}');
+  const facKey = p.ts ? String(p.ts) : String(i);
+  const facMarcado = !!facturados[facKey];
+  return `
+    <div class="ec-top">
+      <div class="ec-num">✓</div>
+      <div class="ec-info">
+        <div class="ec-cliente">${p.cliente}${p.zona?` <span class="p-zona">${p.zona}</span>`:''}</div>
+        <div class="ec-dir">📍 ${p.dir||'—'}${p.tel?' · 📱 '+p.tel:''}</div>
+      </div>
+      <div style="background:var(--green);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px 9px;min-width:78px;text-align:center;flex-shrink:0;">
+        <span style="font-size:.55rem;letter-spacing:1.5px;text-transform:uppercase;opacity:.8;margin-bottom:1px;">Cobrado</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:.97rem;font-weight:800;line-height:1.1;">$${totalActual.toLocaleString('es-AR')}</span>
+      </div>
+    </div>
+    <div class="ec-items">${itemsHTML}</div>
+    <div class="ec-cobro">
+      <div class="modo">${cobroTxt}</div>
+      ${est.obs?`<div class="acl">⚠ ${est.obs}</div>`:''}
+    </div>
+    <div class="ec-factura">
+      <div class="factura-badge">
+        <div class="factura-check${facMarcado?' marcado':''}" id="fcheck-${i}"></div>
+        <span class="factura-lbl${facMarcado?' ok':''}">
+          ${facMarcado?'✓ Factura emitida':'Pendiente de facturar'}
+        </span>
+      </div>
+      ${facMarcado?`<span style="font-size:.7rem;color:var(--green);">Marcado por admin</span>`:'<span style="font-size:.7rem;color:var(--muted);">El admin marca cuando factura</span>'}
+    </div>
+    <div class="ec-foot">
+      <button onclick="desmarcarEntregado(${i})">↩ Desmarcar</button>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════
+// CALCULAR TOTAL CON ITEMS
+// ══════════════════════════════════════════════
+function calcTotal(items) {
+  return items.reduce((a,it) => a + (it.q * (it.precioUnit||0)), 0);
+}
+
+// ══════════════════════════════════════════════
+// MODIFICAR PEDIDO
+// ══════════════════════════════════════════════
+function toggleMod(i) {
+  const panel = document.getElementById('mod-'+i);
+  const est = getEstado(i);
+  if (!panel) return;
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  est._modOpen = !isOpen;
+  // Si abre, inicializar itemsMod si no existe
+  if (!isOpen && !est.itemsMod) {
+    est.itemsMod = JSON.parse(JSON.stringify(pedidos[i].items));
+  }
+  if (!isOpen) actualizarModTotal(i);
+  saveEstado();
+  // Actualizar clase del botón
+  const btn = document.querySelector(`#parada-${i} .btn-mod`);
+  if (btn) btn.classList.toggle('active', !isOpen);
+}
+
+function getModItems(i) {
+  const est = getEstado(i);
+  if (!est.itemsMod) est.itemsMod = JSON.parse(JSON.stringify(pedidos[i].items));
+  return est.itemsMod;
+}
+
+function modChg(paridx, itemidx, delta) {
+  const items = getModItems(paridx);
+  items[itemidx].q = Math.max(0, items[itemidx].q + delta);
+  actualizarModUI(paridx, itemidx, items[itemidx]);
+  actualizarModTotal(paridx);
+  saveEstado();
+}
+
+function modSet(paridx, itemidx, val) {
+  const items = getModItems(paridx);
+  items[itemidx].q = Math.max(0, parseInt(val)||0);
+  actualizarModUI(paridx, itemidx, items[itemidx]);
+  actualizarModTotal(paridx);
+  saveEstado();
+}
+
+function actualizarModUI(paridx, itemidx, item) {
+  const subEl = document.getElementById(`modsub-${paridx}-${itemidx}`);
+  if (subEl) subEl.textContent = '$'+(item.q*(item.precioUnit||0)).toLocaleString('es-AR');
+}
+
+function actualizarModTotal(i) {
+  const items = getModItems(i);
+  const total = calcTotal(items);
+  const el = document.getElementById('modtotal-'+i);
+  if (el) el.textContent = '$'+total.toLocaleString('es-AR');
+}
+
+function buscarModProd(paridx, v) {
+  const ac = document.getElementById('modac-'+paridx);
+  if (!v.trim()) { ac.style.display='none'; return; }
+  const q = v.toLowerCase();
+  const found = catalogo.filter(p => p.activo && p.nombre.toLowerCase().includes(q));
+  if (!found.length) { ac.style.display='none'; return; }
+  ac.innerHTML = found.map(p =>
+    `<div class="mod-ac-item" onclick="agregarModProd(${paridx},${p.id})">
+      <span>${p.nombre}</span>
+      <span style="color:var(--muted);font-size:.74rem;">$${p.precio.toLocaleString('es-AR')}</span>
+    </div>`).join('');
+  ac.style.display='block';
+}
+
+function agregarModProd(paridx, prodId) {
+  const items = getModItems(paridx);
+  const existe = items.find(it=>it.id===prodId);
+  if (existe) {
+    existe.q++;
+  } else {
+    const p = catalogo.find(x=>x.id===prodId);
+    if (!p) return;
+    items.push({id:p.id, n:p.nombre, q:1, precioUnit:p.precio, esPromo:false, subtotal:p.precio});
+  }
+  // Limpiar búsqueda y cerrar AC
+  const input = document.getElementById('modsearch-'+paridx);
+  if (input) input.value='';
+  const ac = document.getElementById('modac-'+paridx);
+  if (ac) ac.style.display='none';
+  // Re-renderizar el panel de modificación
+  rebuildModPanel(paridx);
+  actualizarModTotal(paridx);
+  saveEstado();
+}
+
+function rebuildModPanel(i) {
+  const items = getModItems(i);
+  const cont = document.getElementById('moditems-'+i);
+  if (!cont) return;
+  cont.innerHTML = items.map((it,idx) => `
+    <div class="mod-item">
+      <div class="mod-item-nombre">${it.n}</div>
+      <div class="mod-qty-wrap">
+        <button class="minus" onclick="modChg(${i},${idx},-1)">−</button>
+        <input class="mod-qty" type="number" min="0" value="${it.q}"
+          oninput="modSet(${i},${idx},this.value)" onfocus="this.select()"/>
+        <button onclick="modChg(${i},${idx},1)">+</button>
+      </div>
+      <div class="mod-sub" id="modsub-${i}-${idx}">$${(it.q*(it.precioUnit||0)).toLocaleString('es-AR')}</div>
+    </div>`).join('');
+}
+
+function aplicarMod(i) {
+  const est = getEstado(i);
+  // Filtrar items con q=0
+  est.itemsMod = (est.itemsMod||[]).filter(it=>it.q>0);
+  if (!est.itemsMod.length) { alert('El pedido quedó vacío. Agregá al menos un producto.'); return; }
+  // Cerrar panel
+  const panel = document.getElementById('mod-'+i);
+  if (panel) panel.classList.remove('open');
+  est._modOpen = false;
+  saveEstado();
+  renderRuta();
+  // Volver a pendientes
+  switchSub('pend');
+}
+
+// ══════════════════════════════════════════════
+// COBRO
+// ══════════════════════════════════════════════
+function setModo(i, modo) {
+  const est = getEstado(i);
+  est.modo = modo;
+  saveEstado();
+  // Actualizar botones sin re-render completo
+  const parada = document.getElementById('parada-'+i);
+  if (!parada) return;
+  parada.querySelectorAll('.modo-btn').forEach(b => {
+    b.className = 'modo-btn';
+    if (b.textContent.includes('Efectivo')     && (modo==='efe')) b.classList.add('s-efe');
+    if (b.textContent.includes('Transferencia')&& (modo==='tra')) b.classList.add('s-tra');
+    if (b.textContent.includes('Mixto')        && (modo==='mix')) b.classList.add('s-mix');
+  });
+  // Actualizar campos de montos
+  const montosDiv = document.getElementById('montos-'+i);
+  if (montosDiv) {
+    montosDiv.innerHTML = `
+      ${(modo==='efe'||modo==='mix')?`<div class="monto-field"><label>💵 Efectivo $</label><input type="number" id="efe-${i}" value="${est.efectivo||''}" placeholder="0" oninput="saveM(${i})"/></div>`:''}
+      ${(modo==='tra'||modo==='mix')?`<div class="monto-field"><label>📲 Transferencia $</label><input type="number" id="tra-${i}" value="${est.transferencia||''}" placeholder="0" oninput="saveM(${i})"/></div>`:''}`;
+  }
+}
+
+function saveM(i) {
+  const est = getEstado(i);
+  const eEl = document.getElementById('efe-'+i);
+  const tEl = document.getElementById('tra-'+i);
+  if (eEl) est.efectivo      = eEl.value;
+  if (tEl) est.transferencia = tEl.value;
+  saveEstado();
+}
+
+function saveObs(i) {
+  const est = getEstado(i);
+  const el = document.getElementById('obs-'+i);
+  if (el) est.obs = el.value;
+  saveEstado();
+}
+
+function marcarEntregado(i) {
+  saveM(i); saveObs(i);
+  const est = getEstado(i);
+  if (!est.modo) { alert('Seleccioná la forma de pago primero.'); return; }
+  est.entregado = true;
+  saveEstado();
+  switchSub('pend');
+  renderRuta();
+  window.scrollTo(0,0);
+}
+
+function desmarcarEntregado(i) {
+  const est = getEstado(i);
+  est.entregado = false;
+  saveEstado();
+  renderRuta();
+}
+
+// ══════════════════════════════════════════════
+// STOCK
+// ══════════════════════════════════════════════
+function renderStock() {
+  // Stock de pedidos
+  const tot = {};
+  pedidos.forEach(p => {
+    const est = getEstado(pedidos.indexOf(p));
+    const items = est.itemsMod || p.items;
+    items.forEach(it => tot[it.n] = (tot[it.n]||0) + it.q);
+  });
+  const grid = document.getElementById('stockPedGrid');
+  grid.innerHTML='';
+  let ok=false;
+  Object.entries(tot).forEach(([n,q]) => {
+    ok=true;
+    const d=document.createElement('div');d.className='si';
+    d.innerHTML=`<span class="si-name">${n}</span><span class="si-qty">${q}</span>`;
+    grid.appendChild(d);
+  });
+  if(!ok) grid.innerHTML='<div class="empty">Sin pedidos cargados.</div>';
+  document.getElementById('totalFinal').textContent='$ '+pedidos.reduce((a,p,i)=>{
+    const est=getEstado(i);
+    const items=est.itemsMod||p.items;
+    return a+calcTotal(items);
+  },0).toLocaleString('es-AR');
+
+  // Stock prospección
+  const pItems = Object.values(prospData).filter ? 
+    Object.entries(prospData).filter(([,v])=>v&&v.qty>0) :
+    Object.entries(prospData).filter(([,v])=>typeof v==='object'&&v.qty>0);
+
+  const prosp2 = typeof Object.values(prospData)[0]==='object' ?
+    Object.entries(prospData).filter(([,v])=>v.qty>0) : [];
+
+  const prospSection = document.getElementById('stockProspSection');
+  const prospGrid    = document.getElementById('stockProspGrid');
+  prospGrid.innerHTML='';
+
+  if (prosp2.length) {
+    prospSection.style.display='block';
+    prosp2.forEach(([id,v]) => {
+      const d=document.createElement('div');d.className='si';
+      d.innerHTML=`<span class="si-name">${v.nombre||id}</span><span class="si-qty" style="color:var(--purple);">${v.qty}</span>`;
+      prospGrid.appendChild(d);
+    });
+  } else {
+    prospSection.style.display='none';
+  }
+}
+
+// ══════════════════════════════════════════════
+// REPORTE
+// ══════════════════════════════════════════════
+function enviarReporte() {
+  const d = new Date().toLocaleDateString('es-AR');
+  const modos = {efe:'💵 Efectivo',tra:'📲 Transferencia',mix:'🔀 Mixto'};
+  let txt = `📋 REPORTE REPARTIDOR — ${d}\n${'═'.repeat(36)}\n\n`;
+  let totalEfe=0, totalTra=0;
+
+  pedidos.forEach((p,i) => {
+    const est = getEstado(i);
+    const items = est.itemsMod || p.items;
+    const total = calcTotal(items);
+    txt += `${i+1}. ${p.cliente}${p.zona?' ['+p.zona+']':''}\n`;
+    if(p.dir) txt += `   📍 ${p.dir}\n`;
+    items.forEach(it => txt += `   • ${it.q}x ${it.n}\n`);
+    txt += `   💰 Total: $${total.toLocaleString('es-AR')}\n`;
+    if(est.entregado){
+      let cobro = modos[est.modo]||'—';
+      const ve=Number(est.efectivo||0), vt=Number(est.transferencia||0);
+      if(est.modo==='efe'||est.modo==='mix'){cobro+=` $${ve.toLocaleString('es-AR')}`;totalEfe+=ve;}
+      if(est.modo==='tra'||est.modo==='mix'){cobro+=` Transf $${vt.toLocaleString('es-AR')}`;totalTra+=vt;}
+      txt += `   ✓ ${cobro}\n`;
+      if(est.obs) txt += `   ⚠ ${est.obs}\n`;
+    } else {
+      txt += `   ⏳ Sin entregar\n`;
+    }
+    txt += '\n';
+  });
+
+  txt += `${'─'.repeat(36)}\n`;
+  txt += `✅ Entregados: ${Object.values(estado).filter(e=>e.entregado).length}/${pedidos.length}\n`;
+  txt += `💵 Efectivo total: $${totalEfe.toLocaleString('es-AR')}\n`;
+  txt += `📲 Transferencia total: $${totalTra.toLocaleString('es-AR')}\n`;
+  txt += `💰 Total cobrado: $${(totalEfe+totalTra).toLocaleString('es-AR')}\n`;
+
+  window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+}
+
+init();
+</script>
+</body>
+</html>
