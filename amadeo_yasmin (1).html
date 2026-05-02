@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Amadeo — Pedidos</title>
+<title>Yasmin / Francisco — Pedidos</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap');
 :root{
@@ -392,7 +392,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--blue);}
 <div id="appAdmin" style="display:none;">
   <div class="app-bar">
     <div class="app-bar-top">
-      <h1>📦 Amadeo — Admin <span class="online-dot" id="dotAdmin"></span></h1>
+      <h1>📦 Yasmin — Admin <span class="online-dot" id="dotAdmin"></span></h1>
       <div class="app-bar-right">
         <span class="user-badge">Administrativo</span>
         <button class="btn-logout" onclick="logout()">Salir</button>
@@ -627,7 +627,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--blue);}
 <div id="appRep" style="display:none;">
   <div class="app-bar">
     <div class="app-bar-top">
-      <h1>🚚 Amadeo — Repartidor <span class="online-dot"></span></h1>
+      <h1>🚚 Francisco — Repartidor <span class="online-dot"></span></h1>
       <div class="app-bar-right">
         <span class="user-badge" style="background:rgba(76,175,80,.2);color:#90ee90;">Repartidor</span>
         <button class="btn-logout" onclick="logout()">Salir</button>
@@ -756,8 +756,8 @@ const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 
 // ── CONTRASEÑAS (cambiá estas) ──
-const PASS_ADMIN = "admin2025";
-const PASS_REP   = "rep2025";
+const PASS_ADMIN = "yasmin2025";
+const PASS_REP   = "francisco2025";
 
 // ══════════════════════════════════════════════
 // ESTADO LOCAL
@@ -842,7 +842,7 @@ async function iniciarAdmin() {
   escucharVentas();
 
   // Restaurar día
-  const dia = localStorage.getItem('am_dia')||'';
+  const dia = localStorage.getItem('am2_dia')||'';
   if (dia) selDia(dia); else document.getElementById('avisoDia').classList.add('show');
 }
 
@@ -860,7 +860,7 @@ async function iniciarRep() {
   escucharFacturados();
 
   // Restaurar estado del repartidor
-  const raw = localStorage.getItem('am_rep_estado');
+  const raw = localStorage.getItem('am2_rep_estado');
   if (raw) repEstado = JSON.parse(raw);
 
   renderRepRecorrido();
@@ -870,7 +870,7 @@ async function iniciarRep() {
 // FIREBASE — CATÁLOGO
 // ══════════════════════════════════════════════
 async function cargarCatalogo() {
-  const snap = await get(ref(db,'catalogo'));
+  const snap = await get(ref(db,'sector2/catalogo'));
   if (snap.exists()) {
     catalogo = Object.values(snap.val());
   } else {
@@ -893,19 +893,19 @@ async function cargarCatalogo() {
       {id:15,nombre:'OCB',precio:3000,tipo:'prod',activo:true,reglas:[]},
       {id:16,nombre:'Pilas',precio:5000,tipo:'prod',activo:true,reglas:[]},
     ];
-    await set(ref(db,'catalogo'), Object.fromEntries(catalogo.map(p=>[p.id,p])));
+    await set(ref(db,'sector2/catalogo'), Object.fromEntries(catalogo.map(p=>[p.id,p])));
   }
 }
 
 async function saveCatalogo() {
-  await set(ref(db,'catalogo'), Object.fromEntries(catalogo.map(p=>[p.id,p])));
+  await set(ref(db,'sector2/catalogo'), Object.fromEntries(catalogo.map(p=>[p.id,p])));
 }
 
 // ══════════════════════════════════════════════
 // FIREBASE — CLIENTES
 // ══════════════════════════════════════════════
 async function cargarClientes() {
-  const snap = await get(ref(db,'clientes'));
+  const snap = await get(ref(db,'sector2/clientes'));
   if (snap.exists()) {
     clientes = Object.values(snap.val()).filter(Boolean);
   } else {
@@ -917,14 +917,14 @@ async function cargarClientes() {
 async function saveClientes() {
   const obj = {};
   clientes.forEach(c => obj[c.id]=c);
-  await set(ref(db,'clientes'), obj);
+  await set(ref(db,'sector2/clientes'), obj);
 }
 
 // ══════════════════════════════════════════════
 // FIREBASE — PEDIDOS (tiempo real)
 // ══════════════════════════════════════════════
 function escucharPedidos() {
-  onValue(ref(db,'pedidos'), snap => {
+  onValue(ref(db,'sector2/pedidos'), snap => {
     pedidos = snap.exists() ? snap.val() : {};
     if (rolActual==='admin') {
       renderRuta(); renderStock();
@@ -939,7 +939,7 @@ async function guardarPedidoFB(pedido) {
     await set(ref(db,'pedidos/'+editPedKey), pedido);
     editPedKey=null;
   } else {
-    await push(ref(db,'pedidos'), pedido);
+    await push(ref(db,'sector2/pedidos'), pedido);
   }
 }
 
@@ -951,7 +951,7 @@ async function eliminarPedidoFB(key) {
 // FIREBASE — ESTADO REPARTIDOR (tiempo real)
 // ══════════════════════════════════════════════
 function escucharRepEstado() {
-  onValue(ref(db,'rep_estado'), snap => {
+  onValue(ref(db,'sector2/rep_estado'), snap => {
     repEstado = snap.exists() ? snap.val() : {};
     if (rolActual==='admin' && document.getElementById('av-seguimiento').classList.contains('active'))
       renderSeguimiento();
@@ -961,28 +961,28 @@ function escucharRepEstado() {
 async function saveRepEstadoFB(key, est) {
   await set(ref(db,'rep_estado/'+key), est);
   // También guardar local
-  localStorage.setItem('am_rep_estado', JSON.stringify(repEstado));
+  localStorage.setItem('am2_rep_estado', JSON.stringify(repEstado));
 }
 
 // ══════════════════════════════════════════════
 // FIREBASE — PROSPECCIÓN
 // ══════════════════════════════════════════════
 function escucharProsp() {
-  onValue(ref(db,'prosp'), snap => {
+  onValue(ref(db,'sector2/prosp'), snap => {
     prosp = snap.exists() ? snap.val() : {};
     if (rolActual==='rep') renderRepStock();
   });
 }
 
 async function saveProspFB() {
-  await set(ref(db,'prosp'), prosp);
+  await set(ref(db,'sector2/prosp'), prosp);
 }
 
 // ══════════════════════════════════════════════
 // FIREBASE — FACTURADOS
 // ══════════════════════════════════════════════
 function escucharFacturados() {
-  onValue(ref(db,'facturados'), snap => {
+  onValue(ref(db,'sector2/facturados'), snap => {
     facturados = snap.exists() ? snap.val() : {};
     if (rolActual==='admin' && document.getElementById('av-seguimiento').classList.contains('active'))
       renderSeguimiento();
@@ -994,7 +994,7 @@ function escucharFacturados() {
 let ventasFirebase = {};
 
 function escucharVentas() {
-  onValue(ref(db,'ventas_prosp'), snap => {
+  onValue(ref(db,'sector2/ventas_prosp'), snap => {
     ventasFirebase = snap.exists() ? snap.val() : {};
     if (rolActual==='admin' && document.getElementById('av-ventas').classList.contains('active'))
       renderAdminVentas();
@@ -1069,7 +1069,7 @@ async function saveFacturadoFB(key, val) {
 // ══════════════════════════════════════════════
 window.selDia = (dia) => {
   diaActual = dia;
-  localStorage.setItem('am_dia', dia);
+  localStorage.setItem('am2_dia', dia);
   document.querySelectorAll('.dia-btn').forEach(b => b.classList.toggle('active', b.dataset.dia===dia));
   document.getElementById('avisoDia').classList.remove('show');
   actualizarTituloRuta();
@@ -1984,9 +1984,9 @@ document.addEventListener('click',e=>{
 // ══════════════════════════════════════════════
 let itemsVenta  = [];
 let ventaModo   = '';
-let ventasGuardadas = JSON.parse(localStorage.getItem('am_ventas')||'[]');
+let ventasGuardadas = JSON.parse(localStorage.getItem('am2_ventas')||'[]');
 
-function saveVentas(){ localStorage.setItem('am_ventas', JSON.stringify(ventasGuardadas)); }
+function saveVentas(){ localStorage.setItem('am2_ventas', JSON.stringify(ventasGuardadas)); }
 
 window.buscarVentaProd = (v) => {
   const ac = document.getElementById('ventaProdAc');
