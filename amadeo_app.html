@@ -1069,6 +1069,7 @@ async function saveFacturadoFB(key, val) {
 // ══════════════════════════════════════════════
 window.selDia = (dia) => {
   diaActual = dia;
+  ordenManual = []; // resetear orden manual al cambiar de día
   localStorage.setItem('am_dia', dia);
   document.querySelectorAll('.dia-btn').forEach(b => b.classList.toggle('active', b.dataset.dia===dia));
   document.getElementById('avisoDia').classList.remove('show');
@@ -1281,21 +1282,68 @@ function resetForm(){
 // ══════════════════════════════════════════════
 // RENDER RECORRIDO ADMIN
 // ══════════════════════════════════════════════
+// ── Orden manual del día (se resetea al cambiar de día)
+let ordenManual = [];
+
+function getOrdenRuta(p) {
+  if (!diaActual) return p.orden||999;
+  const cli = clientes.find(c=>c.id===p.clienteId);
+  if (!cli) return p.orden||999;
+  if (diaActual==='lunes'||diaActual==='miercoles'||diaActual==='viernes')
+    return cli.ordenLMV||cli.orden||999;
+  if (diaActual==='martes'||diaActual==='jueves')
+    return cli.ordenMJ||cli.orden||999;
+  if (diaActual==='sabado')
+    return cli.ordenSAB||cli.orden||999;
+  return cli.orden||999;
+}
+
 function renderRuta() {
   actualizarTituloRuta();
-  const lista=Object.entries(pedidos)
+  let lista = Object.entries(pedidos)
     .filter(([,p])=>!diaActual||p.dia===diaActual)
-    .map(([k,p])=>({...p,_k:k}))
-    .sort((a,b)=>(a.orden||999)-(b.orden||999));
-  document.getElementById('rutaCount').textContent=lista.length+' parada'+(lista.length!==1?'s':'');
-  const c=document.getElementById('listaParadas');
-  if(!lista.length){c.innerHTML=`<div class="empty">No hay pedidos para ${DIAS_LABEL[diaActual]||'este día'}.</div>`;return;}
-  c.innerHTML='';
-  lista.forEach((p,pos)=>{
-    const div=document.createElement('div');div.className='parada';
-    const items=p.items.map(it=>`<span class="ptag${it.esPromo?' promo':''}"><span class="pqty">${it.q}×</span>${it.n}</span>`).join('');
-    const cob=p.total>0?`<div class="parada-cobrar"><span class="clbl">Cobrar</span><span class="cval">$${p.total.toLocaleString('es-AR')}</span></div>`:`<div class="parada-cobrar nc"><span class="clbl">Sin monto</span></div>`;
-    div.innerHTML=`
+    .map(([k,p])=>({...p,_k:k}));
+
+  const keysActuales = lista.map(p=>p._k).sort().join(',');
+  const keysManual   = [...ordenManual].sort().join(',');
+  if (ordenManual.length && keysActuales===keysManual) {
+    const posMap = {};
+    ordenManual.forEach((k,i)=>posMap[k]=i);
+    lista.sort((a,b)=>(posMap[a._k]??999)-(posMap[b._k]??999));
+  } else {
+    lista.sort((a,b)=>getOrdenRuta(a)-getOrdenRuta(b));
+    ordenManual = lista.map(p=>p._k);
+  }
+
+  document.getElementById('rutaCount').textContent = lista.length+' parada'+(lista.length!==1?'s':'');
+  const c = document.getElementById('listaParadas');
+  if (!lista.length) {
+    c.innerHTML = `<div class="empty">No hay pedidos para ${DIAS_LABEL[diaActual]||'este día'}.</div>`;
+    return;
+  }
+  c.innerHTML = '';
+
+  lista.forEach((p, pos) => {
+    const div = document.createElement('div');
+    div.className = 'parada';
+
+    const items = p.items.map(it =>
+      `<span class="ptag${it.esPromo?' promo':''}"><span class="pqty">${it.q}×</span>${it.n}</span>`
+    ).join('');
+
+    const cob = p.total > 0
+      ? `<div class="parada-cobrar"><span class="clbl">Cobrar</span><span class="cval">$${p.total.toLocaleString('es-AR')}</span></div>`
+      : `<div class="parada-cobrar nc"><span class="clbl">Sin monto</span></div>`;
+
+    const btnSubir = pos > 0
+      ? `<button onclick="moverParada(${JSON.stringify(p._k)},-1)">↑ Subir</button>`
+      : `<button disabled style="opacity:.3">↑ Subir</button>`;
+
+    const btnBajar = pos < lista.length-1
+      ? `<button onclick="moverParada(${JSON.stringify(p._k)},1)">↓ Bajar</button>`
+      : `<button disabled style="opacity:.3">↓ Bajar</button>`;
+
+    div.innerHTML = `
       <div class="parada-top">
         <div class="parada-num">${pos+1}</div>
         <div class="parada-info">
@@ -1307,13 +1355,25 @@ function renderRuta() {
       <div class="parada-body">${items}</div>
       ${p.obs?`<div class="parada-obs">⚠ ${p.obs}</div>`:''}
       <div class="parada-actions">
-        <button onclick="editarPedido('${p._k}')">✏ Editar</button>
-        <button class="del" onclick="borrarPedido('${p._k}')">✕ Quitar</button>
+        ${btnSubir}
+        ${btnBajar}
+        <button onclick="editarPedido(${JSON.stringify(p._k)})">✏ Editar</button>
+        <button class="del" onclick="borrarPedido(${JSON.stringify(p._k)})">✕ Quitar</button>
       </div>`;
     c.appendChild(div);
   });
 }
 
+window.moverParada = (k, dir) => {
+  const idx = ordenManual.indexOf(k);
+  if (idx === -1) return;
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= ordenManual.length) return;
+  const tmp = ordenManual[idx];
+  ordenManual[idx]    = ordenManual[newIdx];
+  ordenManual[newIdx] = tmp;
+  renderRuta();
+};
 window.editarPedido=(k)=>{
   const p=pedidos[k];if(!p)return;
   const cl=clientes.find(c=>c.id===p.clienteId);

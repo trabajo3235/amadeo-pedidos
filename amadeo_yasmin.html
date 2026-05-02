@@ -1304,64 +1304,76 @@ function renderRuta() {
     .filter(([,p])=>!diaActual||p.dia===diaActual)
     .map(([k,p])=>({...p,_k:k}));
 
-  // Usar orden manual si existe y coincide, sino ordenar por grupo de días
   const keysActuales = lista.map(p=>p._k).sort().join(',');
   const keysManual   = [...ordenManual].sort().join(',');
   if (ordenManual.length && keysActuales===keysManual) {
-    const pos = {};
-    ordenManual.forEach((k,i)=>pos[k]=i);
-    lista.sort((a,b)=>(pos[a._k]??999)-(pos[b._k]??999));
+    const posMap = {};
+    ordenManual.forEach((k,i)=>posMap[k]=i);
+    lista.sort((a,b)=>(posMap[a._k]??999)-(posMap[b._k]??999));
   } else {
     lista.sort((a,b)=>getOrdenRuta(a)-getOrdenRuta(b));
     ordenManual = lista.map(p=>p._k);
   }
 
-  document.getElementById('rutaCount').textContent=lista.length+' parada'+(lista.length!==1?'s':'');
-  const c=document.getElementById('listaParadas');
-  if(!lista.length){c.innerHTML='<div class="empty">No hay pedidos para '+( DIAS_LABEL[diaActual]||'este día')+'.</div>';return;}
-  c.innerHTML='';
+  document.getElementById('rutaCount').textContent = lista.length+' parada'+(lista.length!==1?'s':'');
+  const c = document.getElementById('listaParadas');
+  if (!lista.length) {
+    c.innerHTML = `<div class="empty">No hay pedidos para ${DIAS_LABEL[diaActual]||'este día'}.</div>`;
+    return;
+  }
+  c.innerHTML = '';
 
-  lista.forEach((p,pos)=>{
-    const div=document.createElement('div');div.className='parada';
-    const items=p.items.map(it=>'<span class="ptag'+(it.esPromo?' promo':'')+'"><span class="pqty">'+it.q+'×</span>'+it.n+'</span>').join('');
-    const cob=p.total>0
-      ?'<div class="parada-cobrar"><span class="clbl">Cobrar</span><span class="cval">$'+p.total.toLocaleString('es-AR')+'</span></div>'
-      :'<div class="parada-cobrar nc"><span class="clbl">Sin monto</span></div>';
-    const esFirst = pos===0;
-    const esLast  = pos===lista.length-1;
-    div.innerHTML=
-      '<div class="parada-top">'+
-        '<div class="parada-num">'+(pos+1)+'</div>'+
-        '<div class="parada-info">'+
-          '<div class="parada-cliente">'+p.cliente+(p.zona?'<span class="p-zona">'+p.zona+'</span>':'')+'</div>'+
-          '<div class="parada-dir">📍 '+(p.dir||'—')+'</div>'+
-          (p.tel?'<div class="parada-tel">📱 '+p.tel+'</div>':'')+
-        '</div>'+cob+
-      '</div>'+
-      '<div class="parada-body">'+items+'</div>'+
-      (p.obs?'<div class="parada-obs">⚠ '+p.obs+'</div>':'')+
-      '<div class="parada-actions">'+
-        '<button onclick="moverParada(''+p._k+'',-1)" style="'+(esFirst?'opacity:.3;cursor:default;':'')+'" '+(esFirst?'disabled':'')+'>↑ Subir</button>'+
-        '<button onclick="moverParada(''+p._k+'',1)"  style="'+(esLast?'opacity:.3;cursor:default;':'')+'" '+(esLast?'disabled':'')+'>↓ Bajar</button>'+
-        '<button onclick="editarPedido(''+p._k+'')">✏ Editar</button>'+
-        '<button class="del" onclick="borrarPedido(''+p._k+'')">✕ Quitar</button>'+
-      '</div>';
+  lista.forEach((p, pos) => {
+    const div = document.createElement('div');
+    div.className = 'parada';
+
+    const items = p.items.map(it =>
+      `<span class="ptag${it.esPromo?' promo':''}"><span class="pqty">${it.q}×</span>${it.n}</span>`
+    ).join('');
+
+    const cob = p.total > 0
+      ? `<div class="parada-cobrar"><span class="clbl">Cobrar</span><span class="cval">$${p.total.toLocaleString('es-AR')}</span></div>`
+      : `<div class="parada-cobrar nc"><span class="clbl">Sin monto</span></div>`;
+
+    const btnSubir = pos > 0
+      ? `<button onclick="moverParada(${JSON.stringify(p._k)},-1)">↑ Subir</button>`
+      : `<button disabled style="opacity:.3">↑ Subir</button>`;
+
+    const btnBajar = pos < lista.length-1
+      ? `<button onclick="moverParada(${JSON.stringify(p._k)},1)">↓ Bajar</button>`
+      : `<button disabled style="opacity:.3">↓ Bajar</button>`;
+
+    div.innerHTML = `
+      <div class="parada-top">
+        <div class="parada-num">${pos+1}</div>
+        <div class="parada-info">
+          <div class="parada-cliente">${p.cliente}${p.zona?`<span class="p-zona">${p.zona}</span>`:''}</div>
+          <div class="parada-dir">📍 ${p.dir||'—'}</div>
+          ${p.tel?`<div class="parada-tel">📱 ${p.tel}</div>`:''}
+        </div>${cob}
+      </div>
+      <div class="parada-body">${items}</div>
+      ${p.obs?`<div class="parada-obs">⚠ ${p.obs}</div>`:''}
+      <div class="parada-actions">
+        ${btnSubir}
+        ${btnBajar}
+        <button onclick="editarPedido(${JSON.stringify(p._k)})">✏ Editar</button>
+        <button class="del" onclick="borrarPedido(${JSON.stringify(p._k)})">✕ Quitar</button>
+      </div>`;
     c.appendChild(div);
   });
 }
 
 window.moverParada = (k, dir) => {
   const idx = ordenManual.indexOf(k);
-  if (idx===-1) return;
+  if (idx === -1) return;
   const newIdx = idx + dir;
   if (newIdx < 0 || newIdx >= ordenManual.length) return;
-  // Intercambiar posiciones
   const tmp = ordenManual[idx];
   ordenManual[idx]    = ordenManual[newIdx];
   ordenManual[newIdx] = tmp;
   renderRuta();
 };
-
 window.editarPedido=(k)=>{
   const p=pedidos[k];if(!p)return;
   const cl=clientes.find(c=>c.id===p.clienteId);
