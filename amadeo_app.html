@@ -1705,7 +1705,7 @@ function renderAdminVentas() {
 
 // ── CATÁLOGO ADMIN ────────────────────────────
 window.togglePromoConfig=()=>{document.getElementById("promoConfig").style.display=document.getElementById("npTipo").value==="promo"?"block":"none";};
-function renderCatalogo(){
+window.renderCatalogo = function renderCatalogo(){
   const c=document.getElementById("catList");if(!c)return;
   const ftxt=(document.getElementById("catSearch")?.value||"").toLowerCase();
   let lista=catalogo;
