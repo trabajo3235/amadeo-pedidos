@@ -2645,7 +2645,7 @@ function renderRepEntregados(ents) {
     if(est.modo==="efe"||est.modo==="mix")cobTxt+=est.efectivo?` $${Number(est.efectivo).toLocaleString("es-AR")}`:"\xa0";
     if(est.modo==="tra"||est.modo==="mix")cobTxt+=est.transferencia?` Transf $${Number(est.transferencia).toLocaleString("es-AR")}`:"\xa0";
     const esFac=!!facturados[p._k];
-    const esCerrado=!!(getEstRep(p._k)||{}).cerrado;
+    const esCerrado=!!(repEstado[p._k]||{}).cerrado;
     const div=document.createElement("div");div.className="ent-card"+(esCerrado?" cerrado":"");
     div.innerHTML=`
       <div class="ec-top"><div class="ec-num">${esCerrado?'✕':'✓'}</div><div class="ec-info"><div class="ec-cliente">${p.cliente}${esCerrado?'<span class="cerrado-badge">CERRADO</span>':''}</div><div class="ec-dir">📍 ${p.dir||"—"}</div></div><div class="ec-cob"><span class="lbl">${esCerrado?'No cobrado':'Cobrado'}</span><span class="val" style="${esCerrado?'color:#c0392b;':''}">${esCerrado?'—':'$'+totalAct.toLocaleString('es-AR')}</span></div></div>
@@ -2699,8 +2699,8 @@ window.marcarCerrado=async(k)=>{
   const est=getEstRep(k);
   est.entregado=true;
   est.cerrado=true;
-  est.modo=est.modo||"efe"; // modo por defecto si no eligió
-  await saveRepEst(k,est);
+  est.modo=est.modo||"efe";
+  await saveRepEst(k,est,false); // SIN debounce — guardar inmediatamente
 
   // Sumar los productos del pedido al stock de prospección
   const p=pedidos[k]; if(p){
@@ -2722,7 +2722,7 @@ window.marcarEntregado=async(k)=>{
   const est=getEstRep(k);
   if(!est.modo){alert("Seleccioná la forma de pago.");return;}
   est.entregado=true;
-  await saveRepEst(k,est);
+  await saveRepEst(k,est,false); // SIN debounce
   switchRepTab("pend");
   renderRepRecorrido();
   renderRepStock(); // actualizar stock sobrante
@@ -2955,13 +2955,18 @@ async function ajustarProsp(dia, nombre, delta) {
   );
   if (entry) {
     const [k, v] = entry;
-    prosp[dia][k].qty = Math.max(0, (v.qty||0) + delta);
-    if (prosp[dia][k].qty === 0) delete prosp[dia][k];
+    const nuevaQty = Math.max(0, (v.qty||0) + delta);
+    if (nuevaQty === 0) {
+      delete prosp[dia][k]; // eliminar si llega a 0
+    } else {
+      prosp[dia][k].qty = nuevaQty;
+    }
   } else if (delta > 0) {
-    // Crear nueva entrada si es suma
+    // Solo crear entrada nueva si es SUMA (nunca dejar negativos)
     const k = nombre.toLowerCase().replace(/[^a-z0-9]/g,"_");
     prosp[dia][k] = { nombre, qty: delta };
   }
+  // Si delta < 0 y no existe en prospección → ignorar (no hay stock para restar)
   await set(ref(db, FB.prosp), prosp);
 }
 
