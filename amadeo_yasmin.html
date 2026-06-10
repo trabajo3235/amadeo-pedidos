@@ -358,32 +358,32 @@ textarea{resize:none;}
 .btn-del-turno:hover{color:var(--accent);}
 
 /* ── MODAL TICKET CAF ── */
-.modal-ticket{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;align-items:center;justify-content:center;padding:16px;}
+.modal-ticket{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;}
 .modal-ticket.open{display:flex;}
 .modal-ticket-wrap{position:relative;}
 .modal-ticket-close{position:absolute;top:-13px;right:-13px;background:var(--accent);border:none;border-radius:50%;color:#fff;cursor:pointer;font-size:1rem;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-weight:700;z-index:10;}
-#cafTicket{background:#fff;width:320px;border-radius:10px;overflow:hidden;font-family:'Barlow',sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.6);}
+#cafTicket{background:#fff;width:340px;border-radius:10px;overflow:visible;font-family:'Barlow',sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.6);}
 .cft-gold{height:4px;background:linear-gradient(90deg,#1a1612,#c8a000,#1a1612);}
-.cft-header{background:#1a1612;padding:16px 20px 13px;display:flex;align-items:center;gap:12px;}
-.cft-logo{width:52px;height:52px;object-fit:contain;flex-shrink:0;}
-.cft-empresa{font-family:'Bebas Neue',sans-serif;font-size:1.55rem;letter-spacing:3px;color:#fff;line-height:1;}
+.cft-header{background:#1a1612;padding:12px 18px 10px;display:flex;align-items:center;gap:10px;}
+.cft-logo{width:44px;height:44px;object-fit:contain;flex-shrink:0;}
+.cft-empresa{font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:3px;color:#fff;line-height:1;}
 .cft-tagline{font-size:.62rem;color:#c8a000;letter-spacing:2px;text-transform:uppercase;margin-top:2px;font-weight:600;}
-.cft-fecha{background:#f5f0e8;padding:9px 20px;border-bottom:2px solid #e0d8c8;display:flex;justify-content:flex-end;align-items:center;gap:8px;}
+.cft-fecha{background:#f5f0e8;padding:7px 16px;border-bottom:2px solid #e0d8c8;display:flex;justify-content:flex-end;align-items:center;gap:8px;}
 .cft-fecha-lbl{font-size:.6rem;color:#8a8070;text-transform:uppercase;letter-spacing:1px;}
 .cft-fecha-val{font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;color:#1a1612;}
-.cft-productos{padding:11px 20px;border-bottom:2px dashed #e0d8c8;}
+.cft-productos{padding:8px 16px;border-bottom:2px dashed #e0d8c8;}
 .cft-prod-hdr{display:flex;font-family:'Barlow Condensed',sans-serif;font-size:.57rem;font-weight:700;letter-spacing:1px;color:#8a8070;text-transform:uppercase;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #e8e0d0;}
 .cfh-p{flex:1;}.cfh-q{width:28px;text-align:center;}.cfh-pu{width:64px;text-align:right;}.cfh-s{width:64px;text-align:right;}
-.cft-prod-row{display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f0ebe0;}
+.cft-prod-row{display:flex;align-items:center;padding:3px 0;border-bottom:1px solid #f0ebe0;}
 .cft-prod-row:last-child{border-bottom:none;}
-.cfp-n{flex:1;font-size:.82rem;font-weight:600;color:#1a1612;}
-.cfp-q{width:28px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:800;color:#1a4a7a;}
-.cfp-pu{width:64px;text-align:right;font-size:.68rem;color:#8a8070;}
-.cfp-s{width:64px;text-align:right;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;color:#1e6b3c;}
-.cft-total{background:#1a1612;padding:11px 20px;display:flex;align-items:center;justify-content:space-between;}
+.cfp-n{flex:1;font-size:.78rem;font-weight:600;color:#1a1612;}
+.cfp-q{width:26px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:800;color:#1a4a7a;}
+.cfp-pu{width:60px;text-align:right;font-size:.65rem;color:#8a8070;}
+.cfp-s{width:60px;text-align:right;font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;color:#1e6b3c;}
+.cft-total{background:#1a1612;padding:9px 16px;display:flex;align-items:center;justify-content:space-between;}
 .cft-total-lbl{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#777;}
 .cft-total-val{font-family:'Bebas Neue',sans-serif;font-size:1.75rem;letter-spacing:2px;color:#c8a000;}
-.cft-gracias{background:#f5f0e8;padding:13px 20px;text-align:center;}
+.cft-gracias{background:#f5f0e8;padding:10px 16px;text-align:center;}
 .cft-gracias-t{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:3px;color:#1a1612;margin-bottom:2px;}
 .cft-gracias-s{font-size:.63rem;color:#8a8070;letter-spacing:1px;}
 .cft-btns{display:flex;gap:8px;margin-top:11px;}
@@ -871,8 +871,8 @@ function ordenPedido(p) {
 }
 
 // ── CONSTRUIR UI ADMIN ────────────────────────
-const ADMIN_TABS = ["carga","ruta","stock","prosp","seguimiento","ventas","catalogo","clientes"];
-const ADMIN_LABELS = ["✏️ Cargar","🗺 Recorrido","📦 Stock","⭐ Prosp.","👁 Seguimiento","💰 Ventas","🏷 Catálogo","👥 Clientes"];
+const ADMIN_TABS = ["carga","ruta","stock","seguimiento","catalogo","clientes"];
+const ADMIN_LABELS = ["✏️ Cargar","🗺 Recorrido","📦 Stock","👁 Seguimiento","🏷 Catálogo","👥 Clientes"];
 let adminTabActual = "carga";
 
 function buildAdminUI() {
@@ -961,11 +961,7 @@ function buildAdminUI() {
         <div id="admSobranteVacio" style="display:none;color:var(--muted);font-size:.82rem;padding:11px 13px;">✅ Todo entregado — sin sobrante</div>
       </div>
 
-      <!-- PROSPECCIÓN EXTRA DEL ADMIN -->
-      <div class="res-box" id="admProspBox" style="margin-bottom:11px;display:none;">
-        <div class="res-hdr" style="background:#4a1a7a;">⭐ Prospección — extra disponible</div>
-        <div class="sg" id="admProspGrid"></div>
-      </div>
+<!-- Prospección removida -->
 
       <!-- RESUMEN DE COBROS -->
       <div class="res-box" id="admCobrosBox">
@@ -993,7 +989,7 @@ function buildAdminUI() {
     </div>
 
     <!-- PROSPECCIÓN -->
-    <div class="view" id="v-prosp">
+    <div class="view" id="v-prosp" style="display:none!important;">
       <div class="card">
         <div class="sec-lbl">⭐ Prospección — stock extra para el repartidor</div>
         <div class="sw">
@@ -1026,7 +1022,7 @@ function buildAdminUI() {
     </div>
 
     <!-- VENTAS ADMIN -->
-    <div class="view" id="v-ventas">
+    <div class="view" id="v-ventas" style="display:none!important;">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:800;text-transform:uppercase;margin-bottom:11px;">💰 Ventas del repartidor — tiempo real</div>
       <div class="res-box" id="aVentasRes" style="display:none;">
         <div class="res-hdr gold">📊 Resumen del día</div>
@@ -1274,7 +1270,7 @@ window.agregarPedido = async () => {
   if (!cliActual) { alert("Seleccioná un cliente."); return; }
   if (!itemsPedido.length) { alert("Agregá al menos un producto."); return; }
   const obs = document.getElementById("pedObs").value.trim();
-  const items = itemsPedido.map(item => {
+  const items = itemsPedido.slice(0,15).map(item => {
     const {pu,esP} = calcPrecioPromo(item);
     return {id:item.prodId, n:item.nombre, q:item.qty, precioUnit:pu, esPromo:esP, subtotal:item.qty*pu};
   });
@@ -2008,7 +2004,7 @@ window.abrirTicketPedido = () => {
   if (!itemsPedido.length) { alert("Agregá productos al pedido primero."); return; }
 
   // Calcular items con precios
-  const items = itemsPedido.map(item => {
+  const items = itemsPedido.slice(0,15).map(item => {
     const {pu, esP} = calcPrecioPromo(item);
     return { n: item.nombre, q: item.qty, precioUnit: pu, subtotal: item.qty * pu };
   });
@@ -2056,7 +2052,9 @@ async function _generarTicketCanvas() {
     scale: 2,
     backgroundColor: "#ffffff",
     useCORS: true,
-    logging: false
+    logging: false,
+    windowWidth: 380,
+    scrollY: 0
   });
 }
 
@@ -2350,8 +2348,8 @@ function _pdf(ped){
 }
 
 // ── REPARTIDOR UI ─────────────────────────────
-const REP_TABS = ["recorrido","stock","ventas"];
-const REP_LBLS = ["🗺 Recorrido","📦 Stock","💰 Ventas"];
+const REP_TABS = ["recorrido","stock"];
+const REP_LBLS = ["🗺 Recorrido","📦 Stock"];
 let repTabActual = "recorrido";
 let repSubActual = "pend";
 let diaRep = localStorage.getItem("am2_diaRep") || "";
@@ -2408,14 +2406,11 @@ function buildRepUI() {
       </div>
       <!-- Sobrante eliminado — todo va a prospección -->
 
-      <div class="res-box" id="repProspBox" style="display:none;">
-        <div class="res-hdr purp">⭐ Prospección — Extra para vender</div>
-        <div class="sg" id="repProspGrid"></div>
-      </div>
+<!-- Prospección repartidor removida -->
     </div>
 
     <!-- VENTAS REP -->
-    <div class="view" id="v-ventas">
+    <div class="view" id="v-ventas" style="display:none!important;">
       <div class="card">
         <div class="sec-lbl">💰 Registrar venta de prospección</div>
         <!-- Selector de día -->
@@ -2461,7 +2456,7 @@ window.repTab=(t)=>{
   repTabActual=t;
   REP_TABS.forEach((n,i)=>{document.querySelectorAll("#tabsBar .tab-btn")[i]?.classList.toggle("on",n===t);document.getElementById("v-"+n)?.classList.toggle("on",n===t);});
   if(t==="stock")  renderRepStock();
-  if(t==="ventas"){ renderVentasList(); initVentaDia(); }
+  // ventas removida
 };
 
 window.switchRepTab=(s)=>{
@@ -2702,15 +2697,9 @@ window.marcarCerrado=async(k)=>{
   est.modo=est.modo||"efe";
   await saveRepEst(k,est,false); // SIN debounce — guardar inmediatamente
 
-  // Sumar los productos del pedido al stock de prospección
-  const p=pedidos[k]; if(p){
-    const diaP=p.dia||diaRep||"";
-    if(diaP){
-      for(const it of p.items){
-        await ajustarProsp(diaP, it.n, it.q);
-      }
-    }
-  }
+  // Pedido cerrado — el stock pasa a sobrante automáticamente
+  // (renderStock calcula sobrante = original - entregado, y cerrado cuenta como entregado)
+  const p=pedidos[k];
 
   renderRepRecorrido();
   renderRepStock();
@@ -2843,37 +2832,16 @@ window.aplicarModRep=async(k)=>{
   if(!itemsFiltrados.length){alert("El pedido quedó vacío.");return;}
 
   const est=getEstRep(k);
-  const itemsOriginales = pedidos[k]?.items || [];
 
-  // ── Calcular diferencias y ajustar prospección ──
-  const p = pedidos[k];
-  const diaP = p?.dia || diaRep || "";
-  if(diaP){
-    if(!prosp[diaP]) prosp[diaP]={};
-    let cambioProsp = false;
-
-    // Para cada producto, comparar cantidad original vs modificada
-    for(const orig of itemsOriginales){
-      const mod = itemsFiltrados.find(m=>m.id===orig.id||m.n===orig.n);
-      const qOrig = orig.q || 0;
-      const qMod  = mod ? (mod.q||0) : 0;
-      const diff  = qOrig - qMod; // positivo=sobró→suma; negativo=llevó más→resta
-      if(diff!==0) await ajustarProsp(diaP, orig.n, diff);
-    }
-    // Productos nuevos agregados (no estaban en el original) → restar de prospección
-    for(const mod of itemsFiltrados){
-      const orig = itemsOriginales.find(o=>o.id===mod.id||o.n===mod.n);
-      if(!orig) await ajustarProsp(diaP, mod.n, -mod.q);
-    }
-  }
-
+  // Guardar lo que realmente entregó — el sobrante se calcula automáticamente
+  // en renderStock como: pedido original - itemsMod = sobrante
   est.itemsMod = itemsFiltrados;
   delete _modCache[k];
 
   const panel=document.getElementById("rmod-"+k);
   if(panel)panel.classList.remove("on");
   est._modOpen=false;
-  await saveRepEst(k,est);
+  await saveRepEst(k,est,false); // guardar inmediatamente
 
   // Actualizar visualmente sin re-renderizar
   const totalMod = itemsFiltrados.reduce((a,it)=>a+(it.q*(it.precioUnit||0)),0);
